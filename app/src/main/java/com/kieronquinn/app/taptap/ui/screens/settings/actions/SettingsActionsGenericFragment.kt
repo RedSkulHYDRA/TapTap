@@ -28,7 +28,7 @@ import com.kieronquinn.app.taptap.utils.extensions.scrollToBottom
 import com.kieronquinn.app.taptap.utils.extensions.whenResumed
 import com.kieronquinn.monetcompat.extensions.views.applyMonet
 import kotlinx.coroutines.flow.debounce
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 abstract class SettingsActionsGenericFragment<T: ViewBinding, A: Action>(inflate: (LayoutInflater, ViewGroup?, Boolean) -> T): BoundFragment<T>(inflate), LockCollapsed, BackAvailable {
 
@@ -39,7 +39,7 @@ abstract class SettingsActionsGenericFragment<T: ViewBinding, A: Action>(inflate
 
     abstract val viewModel: SettingsActionsGenericViewModel<A>
 
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
 
     private val adapter by lazy {
         SettingsActionsGenericAdapter(getRecyclerView(), ArrayList(), itemTouchHelper::startDrag, viewModel::onItemSelectionStateChange, viewModel::onWhenGateChipClicked)
@@ -101,7 +101,7 @@ abstract class SettingsActionsGenericFragment<T: ViewBinding, A: Action>(inflate
     }
 
     private fun setupFab() = whenResumed {
-        sharedViewModel.fabClicked.collect {
+        activityViewModel.fabClicked.collect {
             when (it) {
                 ContainerSharedViewModel.FabState.FabAction.ADD_ACTION -> {
                     viewModel.onAddActionFabClicked()
@@ -151,13 +151,13 @@ abstract class SettingsActionsGenericFragment<T: ViewBinding, A: Action>(inflate
 
     private fun setupReloadService() = whenResumed {
         viewModel.reloadServiceBus.debounce(1000L).collect {
-            sharedViewModel.restartService(requireContext())
+            activityViewModel.restartService(requireContext())
         }
     }
 
     private fun setupSwitchReloadService() = whenResumed {
         viewModel.switchChanged?.debounce(1000L)?.collect {
-            sharedViewModel.restartService(requireContext())
+            activityViewModel.restartService(requireContext())
         }
     }
 
@@ -178,11 +178,11 @@ abstract class SettingsActionsGenericFragment<T: ViewBinding, A: Action>(inflate
             SettingsActionsGenericViewModel.FabState.ADD -> ContainerSharedViewModel.FabState.Shown(ContainerSharedViewModel.FabState.FabAction.ADD_ACTION)
             SettingsActionsGenericViewModel.FabState.DELETE -> ContainerSharedViewModel.FabState.Shown(ContainerSharedViewModel.FabState.FabAction.DELETE)
         }
-        sharedViewModel.setFabState(state)
+        activityViewModel.setFabState(state)
     }
 
     private fun hideFab() {
-        sharedViewModel.setFabState(ContainerSharedViewModel.FabState.Hidden)
+        activityViewModel.setFabState(ContainerSharedViewModel.FabState.Hidden)
     }
 
     inner class ItemTouchHelperCallback: ItemTouchHelper.Callback() {

@@ -26,7 +26,7 @@ import com.kieronquinn.app.taptap.utils.extensions.scrollToBottom
 import com.kieronquinn.app.taptap.utils.extensions.whenResumed
 import com.kieronquinn.monetcompat.extensions.views.applyMonet
 import kotlinx.coroutines.flow.debounce
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SettingsActionsWhenGatesFragment :
@@ -53,7 +53,7 @@ class SettingsActionsWhenGatesFragment :
         args.action
     }
 
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
     private val adapter by lazy {
         SettingsActionsWhenGatesAdapter(
             binding.settingsActionsWhenGatesRecyclerview,
@@ -138,7 +138,7 @@ class SettingsActionsWhenGatesFragment :
     }
 
     private fun setupFab() = whenResumed {
-        sharedViewModel.fabClicked.collect {
+        activityViewModel.fabClicked.collect {
             when (it) {
                 ContainerSharedViewModel.FabState.FabAction.ADD_REQUIREMENT -> {
                     viewModel.onAddRequirementFabClicked()
@@ -162,7 +162,7 @@ class SettingsActionsWhenGatesFragment :
                 ContainerSharedViewModel.FabState.FabAction.DELETE
             )
         }
-        sharedViewModel.setFabState(state)
+        activityViewModel.setFabState(state)
     }
 
     private fun removeSelectedItem() {
@@ -192,12 +192,12 @@ class SettingsActionsWhenGatesFragment :
     }
 
     private fun hideFab() {
-        sharedViewModel.setFabState(ContainerSharedViewModel.FabState.Hidden)
+        activityViewModel.setFabState(ContainerSharedViewModel.FabState.Hidden)
     }
 
     private fun setupReloadService() = whenResumed {
         viewModel.reloadServiceBus.debounce(1000L).collect {
-            sharedViewModel.restartService(requireContext())
+            activityViewModel.restartService(requireContext())
         }
     }
 

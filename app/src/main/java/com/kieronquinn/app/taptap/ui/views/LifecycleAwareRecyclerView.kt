@@ -8,17 +8,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.kieronquinn.app.taptap.ui.views.LifecycleAwareRecyclerView.Adapter
-import com.kieronquinn.app.taptap.ui.views.LifecycleAwareRecyclerView.ViewHolder
 
 /**
- *  A simple [RecyclerView] whose [ViewHolder]s have a very basic [Lifecycle].
- *
- *  The lifecycle is as follows:
- *  - When the ViewHolder is created -> [Lifecycle.Event.ON_START] and [Lifecycle.Event.ON_CREATE]
- *  - When the ViewHolder is bound -> [Lifecycle.Event.ON_RESUME]
- *  - When the ViewHolder is recycled -> [Lifecycle.Event.ON_PAUSE]
- *  - When the RecyclerView is detached -> [Lifecycle.Event.ON_PAUSE], [Lifecycle.Event.ON_DESTROY]
+ *  RecyclerView which handles the lifecycle of [ViewHolder]s which are [LifecycleOwner]s,
+ *  calling [Lifecycle.Event.ON_RESUME] when bound, [Lifecycle.Event.ON_PAUSE] when recycled,
+ *  and [Lifecycle.Event.ON_STOP] and [Lifecycle.Event.ON_DESTROY] when detached from the
+ *  RecyclerView. [ViewHolder]s should start with [Lifecycle.Event.ON_CREATE], [Lifecycle.Event.ON_START]
  *  and [Lifecycle.Event.ON_STOP]
  *
  *  **Note: Only supports [LinearLayoutManager], and assumes that the [Adapter] will be un-set when
@@ -36,55 +31,93 @@ class LifecycleAwareRecyclerView : RecyclerView {
     abstract class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView), LifecycleOwner {
 
         private val lifecycleRegistry by lazy { LifecycleRegistry(this@ViewHolder) }
+        private var isDestroyed = false
 
         init {
-            handleLifecycleEvent(Lifecycle.Event.ON_START)
             handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+            handleLifecycleEvent(Lifecycle.Event.ON_START)
         }
 
         override val lifecycle
             get() = lifecycleRegistry
 
         internal fun handleLifecycleEvent(event: Lifecycle.Event) {
-            lifecycleRegistry.handleLifecycleEvent(event)
+            // Don't process events if already destroyed
+            if (isDestroyed && event != Lifecycle.Event.ON_DESTROY) {
+                return
+            }
+
+            // Track destruction state
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                isDestroyed = true
+            }
+
+            try {
+                lifecycleRegistry.handleLifecycleEvent(event)
+            } catch (e: IllegalStateException) {
+                // Suppress lifecycle state transition errors that can occur during RecyclerView
+                // recycling edge cases (e.g., when ViewHolder is destroyed but RecyclerView
+                // tries to recycle it again)
+            }
         }
+
+        internal fun isDestroyed(): Boolean = isDestroyed
 
     }
 
     abstract class Adapter<VH: ViewHolder>(private val recyclerView: RecyclerView): RecyclerView.Adapter<VH>() {
 
         private val layoutManager
-            get() = recyclerView.layoutManager as LinearLayoutManager
+            get() = recyclerView.layoutManager as? LinearLayoutManager
 
         override fun onBindViewHolder(holder: VH, position: Int, payloads: MutableList<Any>) {
             super.onBindViewHolder(holder, position, payloads)
-            holder.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            // Only resume if not destroyed
+            if (!holder.isDestroyed()) {
+                holder.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            }
         }
 
         override fun onViewRecycled(holder: VH) {
             super.onViewRecycled(holder)
-            holder.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            // Only pause if not destroyed
+            if (!holder.isDestroyed()) {
+                holder.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            }
         }
 
         override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
             super.onDetachedFromRecyclerView(recyclerView)
+            // Properly destroy all visible ViewHolders in correct lifecycle order
             getCreatedViewHolders().forEach {
-                it.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-                it.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                it.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+                if (!it.isDestroyed()) {
+                    it.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+                    it.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+                    it.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                }
             }
         }
 
         private fun getCreatedViewHolders(): List<ViewHolder> {
-            val firstItem = layoutManager.findFirstVisibleItemPosition()
-            val lastItem = layoutManager.findLastVisibleItemPosition()
+            val manager = layoutManager ?: return emptyList()
+            val firstItem = manager.findFirstVisibleItemPosition()
+            val lastItem = manager.findLastVisibleItemPosition()
+
+            if (firstItem == RecyclerView.NO_POSITION || lastItem == RecyclerView.NO_POSITION) {
+                return emptyList()
+            }
+
             val viewHolders = ArrayList<ViewHolder>()
-            for(i in firstItem until lastItem){
+            for(i in firstItem..lastItem){
                 if(!recyclerView.isAttachedToWindow) continue
                 try {
-                    viewHolders.add(recyclerView.getChildViewHolder(recyclerView.getChildAt(i)) as ViewHolder)
-                }catch (e: NullPointerException){
-                    //Not attached
+                    val child = recyclerView.getChildAt(i - firstItem) ?: continue
+                    val holder = recyclerView.getChildViewHolder(child) as? ViewHolder
+                    if (holder != null) {
+                        viewHolders.add(holder)
+                    }
+                }catch (e: Exception){
+                    // Not attached or invalid state
                 }
             }
             return viewHolders

@@ -25,14 +25,14 @@ import com.kieronquinn.app.taptap.utils.extensions.whenResumed
 import com.kieronquinn.monetcompat.extensions.views.applyMonet
 import kotlinx.coroutines.flow.debounce
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class SettingsGatesFragment :
     BoundFragment<FragmentSettingsGatesBinding>(FragmentSettingsGatesBinding::inflate),
     LockCollapsed, BackAvailable {
 
     private val viewModel by inject<SettingsGatesViewModel>()
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
 
     private val adapter by lazy {
         SettingsGatesAdapter(
@@ -99,7 +99,7 @@ class SettingsGatesFragment :
     }
 
     private fun setupFab() = whenResumed {
-        sharedViewModel.fabClicked.collect {
+        activityViewModel.fabClicked.collect {
             when (it) {
                 ContainerSharedViewModel.FabState.FabAction.ADD_GATE -> {
                     viewModel.onAddGateFabClicked()
@@ -147,7 +147,7 @@ class SettingsGatesFragment :
 
     private fun setupReloadService() = whenResumed {
         viewModel.reloadServiceBus.debounce(1000L).collect {
-            sharedViewModel.restartService(requireContext())
+            activityViewModel.restartService(requireContext())
         }
     }
 
@@ -172,11 +172,11 @@ class SettingsGatesFragment :
                 ContainerSharedViewModel.FabState.FabAction.DELETE
             )
         }
-        sharedViewModel.setFabState(state)
+        activityViewModel.setFabState(state)
     }
 
     private fun hideFab() {
-        sharedViewModel.setFabState(ContainerSharedViewModel.FabState.Hidden)
+        activityViewModel.setFabState(ContainerSharedViewModel.FabState.Hidden)
     }
 
     inner class ItemTouchHelperCallback : ItemTouchHelper.Callback() {

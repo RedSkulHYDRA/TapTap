@@ -15,14 +15,14 @@ import com.kieronquinn.app.taptap.utils.extensions.applyBottomInsets
 import com.kieronquinn.app.taptap.utils.extensions.onClicked
 import com.kieronquinn.app.taptap.utils.extensions.whenResumed
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SettingsOptionsFragment: BoundFragment<FragmentSettingsOptionsBinding>(FragmentSettingsOptionsBinding::inflate), CanShowSnackbar {
 
     private val viewModel by viewModel<SettingsOptionsViewModel>()
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
-    private val containerViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
+    private val containerViewModel by activityViewModel<ContainerSharedViewModel>()
 
     private val adapter by lazy {
         SettingsOptionsAdapter()
@@ -118,17 +118,17 @@ class SettingsOptionsFragment: BoundFragment<FragmentSettingsOptionsBinding>(Fra
     }
 
     private fun setupSwitch(){
-        binding.settingsOptionsEnableTapTap.isChecked = sharedViewModel.isServiceRunning.value
+        binding.settingsOptionsEnableTapTap.isChecked = activityViewModel.isServiceRunning.value
         whenResumed {
             with(binding.settingsOptionsEnableTapTap) {
                 launch {
-                    sharedViewModel.isServiceRunning.collect {
+                    activityViewModel.isServiceRunning.collect {
                         isChecked = it
                     }
                 }
                 launch {
                     onClicked().collect {
-                        sharedViewModel.toggleServiceEnabledState(it.context)
+                        activityViewModel.toggleServiceEnabledState(it.context)
                     }
                 }
             }

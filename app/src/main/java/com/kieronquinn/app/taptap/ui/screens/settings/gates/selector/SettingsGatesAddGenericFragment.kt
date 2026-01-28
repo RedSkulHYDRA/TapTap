@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 abstract class SettingsGatesAddGenericFragment<T : ViewBinding>(inflate: (LayoutInflater, ViewGroup?, Boolean) -> T) :
     BoundFragment<T>(inflate) {
@@ -48,7 +48,7 @@ abstract class SettingsGatesAddGenericFragment<T : ViewBinding>(inflate: (Layout
 
     abstract val viewModel: SettingsGatesAddGenericViewModel
 
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
     private val accessibilityRouter by inject<TapTapAccessibilityRouter>()
 
     private val onResume = MutableSharedFlow<Unit>()
@@ -159,7 +159,7 @@ abstract class SettingsGatesAddGenericFragment<T : ViewBinding>(inflate: (Layout
     }
 
     protected fun showSnackbarForChip(requirement: GateRequirement.UserDisplayedGateRequirement) = whenResumed {
-        sharedViewModel.showSnackbar(getText(requirement.desc))
+        activityViewModel.showSnackbar(getText(requirement.desc))
     }
 
     private fun setupResultListeners() {

@@ -21,14 +21,14 @@ import com.kieronquinn.monetcompat.extensions.views.applyMonet
 import com.kieronquinn.monetcompat.extensions.views.overrideRippleColor
 import io.noties.markwon.Markwon
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.roundToInt
 
 class SettingsUpdateFragment: BoundFragment<FragmentSettingsUpdateBinding>(FragmentSettingsUpdateBinding::inflate), BackAvailable {
 
     private val viewModel by viewModel<SettingsUpdateViewModel>()
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
     private val args by navArgs<SettingsUpdateFragmentArgs>()
     private val markwon by inject<Markwon>()
 
@@ -170,14 +170,14 @@ class SettingsUpdateFragment: BoundFragment<FragmentSettingsUpdateBinding>(Fragm
 
     private fun handleFabState(showFab: Boolean){
         if(showFab){
-            sharedViewModel.setFabState(FabState.Shown(FabState.FabAction.DOWNLOAD))
+            activityViewModel.setFabState(FabState.Shown(FabState.FabAction.DOWNLOAD))
         }else{
-            sharedViewModel.setFabState(FabState.Hidden)
+            activityViewModel.setFabState(FabState.Hidden)
         }
     }
 
     private fun setupFabClick() = whenResumed {
-        sharedViewModel.fabClicked.collect {
+        activityViewModel.fabClicked.collect {
             if(it != FabState.FabAction.DOWNLOAD) return@collect
             viewModel.startDownload()
         }
@@ -191,7 +191,7 @@ class SettingsUpdateFragment: BoundFragment<FragmentSettingsUpdateBinding>(Fragm
     override fun onPause() {
         viewModel.onPause()
         super.onPause()
-        sharedViewModel.setFabState(FabState.Hidden)
+        activityViewModel.setFabState(FabState.Hidden)
     }
 
 }

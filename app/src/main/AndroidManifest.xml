@@ -28,6 +28,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
 
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="false"
@@ -39,9 +42,8 @@
         android:supportsRtl="true"
         android:name=".TapTap"
         android:enableOnBackInvokedCallback="true"
-        android:extractNativeLibs="true"
         android:theme="@style/Theme.TapTap.Splash"
-        tools:targetApi="tiramisu">
+        tools:targetApi="36">
 
         <activity
             android:name=".ui.activities.MainActivity"

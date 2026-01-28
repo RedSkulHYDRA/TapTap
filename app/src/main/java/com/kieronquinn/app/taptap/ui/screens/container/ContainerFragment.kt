@@ -54,7 +54,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ContainerFragment: BoundFragment<FragmentContainerBinding>(FragmentContainerBinding::inflate) {
@@ -110,7 +110,7 @@ class ContainerFragment: BoundFragment<FragmentContainerBinding>(FragmentContain
 
     private val navigation by inject<ContainerNavigation>()
     private val viewModel by viewModel<ContainerViewModel>()
-    private val sharedViewModel by sharedViewModel<ContainerSharedViewModel>()
+    private val activityViewModel by activityViewModel<ContainerSharedViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -153,7 +153,7 @@ class ContainerFragment: BoundFragment<FragmentContainerBinding>(FragmentContain
     }
 
     private fun setupColumbusSettingPhoenix() = whenResumed {
-        sharedViewModel.columbusSettingPhoenixBus.collect {
+        activityViewModel.columbusSettingPhoenixBus.collect {
             viewModel.phoenix()
         }
     }
@@ -304,9 +304,9 @@ class ContainerFragment: BoundFragment<FragmentContainerBinding>(FragmentContain
         binding.fragmentContainerBottomFabContainer.onApplyInsets { view, insets ->
             view.updatePadding(bottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom)
         }
-        handleFabState(sharedViewModel.fabState.value)
+        handleFabState(activityViewModel.fabState.value)
         whenResumed {
-            sharedViewModel.fabState.collect {
+            activityViewModel.fabState.collect {
                 handleFabState(it)
             }
         }
@@ -325,14 +325,14 @@ class ContainerFragment: BoundFragment<FragmentContainerBinding>(FragmentContain
                 binding.fragmentContainerBottomFab.text = getString(fabState.action.labelRes)
                 binding.fragmentContainerBottomFab.setIconResource(fabState.action.iconRes)
                 binding.fragmentContainerBottomFab.setOnClickListener {
-                    sharedViewModel.onFabClicked(fabState.action)
+                    activityViewModel.onFabClicked(fabState.action)
                 }
             }
         }
     }
 
     private fun setupSnackbar() = whenResumed {
-        sharedViewModel.snackbarBus.collect {
+        activityViewModel.snackbarBus.collect {
             Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).apply {
                 applyMonet()
                 anchorView = binding.fragmentContainerBottomNavigation
