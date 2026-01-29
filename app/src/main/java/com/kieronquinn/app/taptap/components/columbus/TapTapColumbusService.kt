@@ -1,5 +1,6 @@
 package com.kieronquinn.app.taptap.components.columbus
 
+import android.content.Context
 import android.util.Log
 import com.google.android.columbus.ColumbusService
 import com.google.android.columbus.PowerManagerWrapper
@@ -11,9 +12,13 @@ import com.kieronquinn.app.taptap.components.columbus.actions.TapTapAction
 import com.kieronquinn.app.taptap.components.columbus.feedback.TapTapFeedbackEffect
 import com.kieronquinn.app.taptap.components.columbus.gates.PassiveGate
 import com.kieronquinn.app.taptap.components.columbus.gates.TapTapGate
+import com.kieronquinn.app.taptap.components.columbus.sensors.IdleStateDetector
 import com.kieronquinn.app.taptap.components.columbus.sensors.ServiceEventEmitter
 import com.kieronquinn.app.taptap.utils.extensions.runOnClose
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.scope.Scope
 
@@ -22,8 +27,12 @@ import org.koin.core.scope.Scope
  *
  *  Re-implements [updateSensorListener] and [stopListening] to handle triple tap,
  *  and adds a new action list. Gates, effects and sensors are untouched.
+ *
+ *  Now includes idle state detection to reduce battery drain by pausing sensors
+ *  when device is idle (no motion for 2 minutes).
  */
 class TapTapColumbusService(
+    private val context: Context,
     private val actions: List<TapTapAction>,
     private val tripleTapActions: List<TapTapAction>,
     private val effects: Set<TapTapFeedbackEffect>,
@@ -31,23 +40,40 @@ class TapTapColumbusService(
     private val gestureController: GestureController,
     powerManager: PowerManagerWrapper,
     scope: Scope,
-    private val serviceEventEmitter: ServiceEventEmitter
+    private val serviceEventEmitter: ServiceEventEmitter,
+    private val coroutineScope: CoroutineScope
 ) : ColumbusService(
     actions, effects, gates, gestureController.gestureSensor, powerManager
 ) {
-
-    init {
-        scope.runOnClose {
-            //Stops listening
-            updateSensorListener()
-        }
-    }
 
     companion object {
         private const val TAG = "Columbus/Service"
     }
 
     private var lastActiveTripleAction: Action? = null
+
+    // Idle state detector to reduce battery drain
+    private val idleStateDetector = IdleStateDetector(context)
+    private var isIdlePaused = false
+    private var shouldBeListening = false
+
+    init {
+        scope.runOnClose {
+            //Stops listening and cleanup
+            idleStateDetector.stop()
+            updateSensorListener()
+        }
+
+        // Start idle state detection
+        idleStateDetector.start()
+
+        // Monitor idle state changes
+        idleStateDetector.isIdle
+            .onEach { isIdle ->
+                handleIdleStateChange(isIdle)
+            }
+            .launchIn(coroutineScope)
+    }
 
     inner class TripleTapCapableGestureListener : GestureController.GestureListener {
         override fun onGestureDetected(
@@ -97,7 +123,8 @@ class TapTapColumbusService(
             Log.i(TAG, "No available actions")
             if(!passiveWhenGatesSet()) {
                 deactivateGates()
-                stopListening()
+                shouldBeListening = false
+                stopListeningInternal()
                 return
             }else{
                 Log.i(TAG, "Passive when gates are set, sensor listener will not be stopped")
@@ -108,15 +135,27 @@ class TapTapColumbusService(
         val blockingGate = blockingActiveGate()
         if (blockingGate != null) {
             Log.i(TAG, "Gated by $blockingGate")
-            stopListening()
+            shouldBeListening = false
+            stopListeningInternal()
             return
         }
 
         Log.i(TAG, "Unblocked, current action $activeAction and triple action $activeTripleAction")
-        startListening()
+        shouldBeListening = true
+
+        // Only start listening if not in idle state
+        if (!isIdlePaused) {
+            startListening()
+        } else {
+            Log.i(TAG, "Device is idle, deferring sensor start")
+        }
     }
 
     override fun stopListening() {
+        stopListeningInternal()
+    }
+
+    private fun stopListeningInternal() {
         if (gestureController.stopListening()) {
             effects.forEach {
                 it.onGestureDetected(0, null)
@@ -129,6 +168,25 @@ class TapTapColumbusService(
             GlobalScope.launch {
                 serviceEventEmitter.postServiceEvent(ServiceEventEmitter.ServiceEvent.Started)
             }
+        }
+    }
+
+    /**
+     * Handle idle state changes to pause/resume sensor listening
+     */
+    private fun handleIdleStateChange(isIdle: Boolean) {
+        Log.i(TAG, "Idle state changed: isIdle=$isIdle, shouldBeListening=$shouldBeListening")
+
+        if (isIdle && shouldBeListening && !isIdlePaused) {
+            // Device became idle, pause sensors to save battery
+            Log.i(TAG, "Pausing sensors due to idle state")
+            isIdlePaused = true
+            stopListeningInternal()
+        } else if (!isIdle && shouldBeListening && isIdlePaused) {
+            // Device is active again, resume sensors
+            Log.i(TAG, "Resuming sensors from idle state")
+            isIdlePaused = false
+            startListening()
         }
     }
 

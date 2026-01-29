@@ -162,6 +162,9 @@ import com.topjohnwu.superuser.Shell
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.Markwon
 import io.noties.markwon.core.MarkwonTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -361,7 +364,12 @@ class TapTap : Application() {
         val gates = if(demoModeRepository.isDemoModeEnabled()){
             demoModeRepository.getGates(this@TapTap, columbusInitializer.lifecycleOwner.lifecycle)
         }else columbusInitializer.gates
+
+        // Create a CoroutineScope for idle detection
+        val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
         return TapTapColumbusService(
+            this@TapTap,  // Add context parameter
             actions,
             tripleTapActions,
             feedbackEffects.toSet(),
@@ -369,10 +377,10 @@ class TapTap : Application() {
             get(),
             get(),
             this,
-            get()
+            get(),
+            serviceScope  // Add coroutine scope parameter
         )
     }
-
     private fun createMarkwon(): Markwon {
         val typeface = ResourcesCompat.getFont(this, R.font.google_sans_text_medium)
         return Markwon.builder(this).usePlugin(object: AbstractMarkwonPlugin() {

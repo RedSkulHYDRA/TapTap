@@ -42,7 +42,7 @@ open class GestureSensorImpl(
             }
         }
 
-        fun setListening(listening: Boolean, samplingPeriod: Int) {
+        open fun setListening(listening: Boolean, samplingPeriod: Int) {
             if(listening && accelerometer != null && gyroscope != null) {
                 sensorManager.registerListener(this, accelerometer, samplingPeriod, handler)
                 sensorManager.registerListener(this, gyroscope, samplingPeriod, handler)

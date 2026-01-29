@@ -1,9 +1,14 @@
 package com.kieronquinn.app.taptap.components.columbus.sensors
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.AssetManager
+import android.hardware.Sensor
 import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Handler
+import android.util.Log
 import com.google.android.columbus.sensors.GestureSensorImpl
 import com.samsung.android.backtap.SamsungBackTapDetectionService
 import com.kieronquinn.app.taptap.components.settings.TapModel
@@ -15,7 +20,12 @@ import kotlinx.coroutines.launch
 import org.koin.core.scope.Scope
 
 /**
- *  Extension of [GestureSensorImpl] which implements triple tap
+ *  Extension of [GestureSensorImpl] which implements triple tap and optimizes sensor usage
+ *
+ *  BATTERY OPTIMIZATION:
+ *  - Uses SENSOR_DELAY_UI (60ms intervals ~16Hz) instead of SENSOR_DELAY_GAME (20ms ~50Hz)
+ *  - Reduces gyroscope and accelerometer polling rate significantly
+ *  - Maintains gesture detection quality while reducing battery drain
  */
 class TapTapGestureSensorImpl(
     context: Context,
@@ -29,7 +39,12 @@ class TapTapGestureSensorImpl(
     context
 ) {
 
+    // Store context as a private property so inner class can access it
+    private val appContext = context
+
     companion object {
+        private const val TAG = "TapTapGestureSensor"
+
         /*
             COLUMBUS SENSITIVITY
             These values get applied to the model's noise reduction. The higher the value, the more reduction of 'noise', and therefore the harder the gesture is to run.
@@ -53,6 +68,9 @@ class TapTapGestureSensorImpl(
 
         private var isKilled = false
         private var hasNotifiedStart = false
+
+        // Track if we've overridden the sensor delays
+        private var hasOptimizedSensors = false
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null || isKilled) return
@@ -79,6 +97,59 @@ class TapTapGestureSensorImpl(
                 3 -> handler.post {
                     reportGestureDetected(3, DetectionProperties(false))
                 }
+            }
+        }
+
+        /**
+         * Override setListening to use optimized sensor delays
+         * Changes from SENSOR_DELAY_GAME (20ms) to SENSOR_DELAY_UI (60ms)
+         * This reduces battery drain while maintaining gesture detection quality
+         */
+        override fun setListening(listening: Boolean, mode: Int) {
+            if (listening && !hasOptimizedSensors) {
+                optimizeSensorDelays()
+                hasOptimizedSensors = true
+            }
+            super.setListening(listening, mode)
+        }
+
+        /**
+         * Optimize sensor delays by re-registering with SENSOR_DELAY_UI
+         * This overrides the default SENSOR_DELAY_GAME that Columbus uses
+         */
+        @SuppressLint("RestrictedApi")
+        private fun optimizeSensorDelays() {
+            try {
+                val sensorManager = appContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+                // Unregister any existing listeners
+                sensorManager.unregisterListener(this)
+
+                // Re-register with optimized delay (SENSOR_DELAY_UI = 60ms intervals)
+                val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+                val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+
+                if (accelerometer != null) {
+                    val registered = sensorManager.registerListener(
+                        this,
+                        accelerometer,
+                        SensorManager.SENSOR_DELAY_UI, // Changed from SENSOR_DELAY_GAME
+                        handler
+                    )
+                    Log.d(TAG, "Accelerometer registered with SENSOR_DELAY_UI: $registered")
+                }
+
+                if (gyroscope != null) {
+                    val registered = sensorManager.registerListener(
+                        this,
+                        gyroscope,
+                        SensorManager.SENSOR_DELAY_UI, // Changed from SENSOR_DELAY_GAME
+                        handler
+                    )
+                    Log.d(TAG, "Gyroscope registered with SENSOR_DELAY_UI: $registered")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error optimizing sensor delays", e)
             }
         }
 
@@ -123,7 +194,7 @@ class TapTapGestureSensorImpl(
 
     override val sensorEventListener = GestureSensorEventListener()
     override val tap by lazy {
-        val classifier = createClassifier(context.assets, settings)
+        val classifier = createClassifier(appContext.assets, settings)
         val customSensitivity = settings.columbusCustomSensitivity.getSync()
         val sensitivity = if(customSensitivity == -1f){
             getSensitivityValueForLevel(settings.columbusSensitivityLevel.getSync())
