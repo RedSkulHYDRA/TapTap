@@ -17,10 +17,6 @@ import java.util.*
  * for asynchronous listening. We therefore use a little bit of a hacky way of detecting - attach
  * a listener on a background thread and then immediately block the main thread waiting for the
  * event (which is almost instantaneous)
- *
- * BATTERY OPTIMIZATION:
- * - Changed from SENSOR_DELAY_NORMAL to SENSOR_DELAY_UI
- * - This is a passive gate that only checks once per gesture, so lower frequency is fine
  */
 class PocketDetectionGate(
     serviceLifecycle: Lifecycle,
@@ -52,8 +48,7 @@ class PocketDetectionGate(
         this.handlerThread = HandlerThread(UUID.randomUUID().toString())
         this.handlerThread.start()
         val handler = Handler(this.handlerThread.looper)
-        // Changed from SENSOR_DELAY_NORMAL to SENSOR_DELAY_UI for better battery life
-        sensorManager.registerListener(sensorListener, proximity, SensorManager.SENSOR_DELAY_UI, handler)
+        sensorManager.registerListener(sensorListener, proximity, SensorManager.SENSOR_DELAY_NORMAL, handler)
         val startTime = System.currentTimeMillis()
         while(isSensorBlocking == null){
             if(System.currentTimeMillis() - startTime > TIMEOUT) break
