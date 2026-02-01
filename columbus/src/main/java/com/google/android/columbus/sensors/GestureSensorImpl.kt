@@ -12,23 +12,38 @@ import android.hardware.TriggerEvent
 import android.hardware.TriggerEventListener
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import com.kieronquinn.app.shared.taprt.BaseTapRT
 
 /**
  * Implementation of the Gesture Sensor that manages high-speed sensor polling
  * for gesture detection while implementing aggressive battery saving strategies.
+ *
+ * This class handles the low-level sensor lifecycle, using proximity and motion
+ * sensors to gate high-power accelerometer and gyroscope usage.
  */
 open class GestureSensorImpl(
     private val context: Context
 ): GestureSensor() {
 
     // --- CONFIGURATION ---
+
+    /**
+     * Duration of inactivity (in ms) before the high-power sensors are suspended
+     * to enter a Deep Sleep state.
+     */
     private val DEEP_SLEEP_TIMEOUT_MS = 60000L
 
-    // 0 = Fastest. Essential for accurate velocity calculation in TensorFlow.
+    /**
+     * 0 = SENSOR_DELAY_FASTEST. Essential for the TensorFlow model to receive
+     * high-density data points (~400Hz) for accurate peak detection.
+     */
     private val TARGET_SAMPLING_PERIOD = 0
 
-    // 100000 = No Batching. Essential for real-time responsiveness.
+    /**
+     * Batching latency in microseconds. Set to a non-zero value to allow the
+     * Hardware Sensor Hub to buffer events, reducing CPU wake-ups.
+     */
     private val MAX_REPORT_LATENCY = 100000
 
     // --- SENSORS & MANAGERS ---
@@ -41,11 +56,18 @@ open class GestureSensorImpl(
     private val significantMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION)
 
     // --- STATE MANAGEMENT ---
-    // 2.5ms (400Hz) - Matches the TF Model's expectation
+
+    /**
+     * Sampling interval expected by the TapRT model (2.5ms / 400Hz).
+     * Modification will negatively impact gesture recognition accuracy.
+     */
     protected val samplingIntervalNs = 2500000L
 
     protected val isRunningInLowSamplingRate = false
 
+    /**
+     * The Tap Runtime (TF Model) initialized with a 160ms window.
+     */
     open val tap: BaseTapRT = TapRT(160000000L)
     open val sensorEventListener = GestureSensorEventListener()
 
@@ -54,27 +76,35 @@ open class GestureSensorImpl(
     private var isDeepSleeping = false
     private var activeMotionListener: TriggerEventListener? = null
 
-    // --- NEW: SCREEN STATE RECEIVER ---
-    // Acts as a "Pre-emptive" wake up. If the screen turns on, we assume usage
-    // and wake the sensors immediately, reducing the "dead zone" latency.
+    /**
+     * Pre-emptively wakes the sensors when the screen turns on.
+     * This reduces the latency "dead-zone" between picking up a device and
+     * the Significant Motion sensor triggering.
+     */
     private val screenStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_ON) {
-                // Force wake-up when screen turns on
-                exitDeepSleep()
+                val powerManager = ctx?.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                // isInteractive checks if the screen is on due to user intent
+                // vs just a notification (results vary by OEM, but it's a good filter)
+                if (powerManager?.isInteractive == true) {
+                    exitDeepSleep()
+                }
             }
         }
     }
-
     open inner class GestureSensorEventListener: SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
         override fun onSensorChanged(event: SensorEvent?) {
             if(event == null) return
 
+            // Interaction detected; reset the countdown to deep sleep
             resetDeepSleepTimer()
 
             val sensorType = event.sensor.type
+
+            // Feed raw data into the Gesture Recognition engine
             tap.updateData(
                 sensorType,
                 event.values[0],
@@ -85,6 +115,7 @@ open class GestureSensorImpl(
                 isRunningInLowSamplingRate
             )
 
+            // Detect double/triple tap timing windows
             val timing = tap.checkDoubleTapTiming(event.timestamp)
             when(timing){
                 1 -> handler.post { reportGestureDetected(2, DetectionProperties(true)) }
@@ -92,13 +123,16 @@ open class GestureSensorImpl(
             }
         }
 
+        /**
+         * Sets the desired listening state.
+         * Logic-aware: manages pocket detection and power-saving timers.
+         */
         fun setListening(listening: Boolean, samplingPeriod: Int) {
             shouldBeListening = listening
             if (listening) {
-                // Register Screen Receiver
                 registerScreenReceiver()
 
-                // Check Proximity (Pocket Mode)
+                // Use Proximity to gate high-power sensors (Pocket Mode)
                 if (proximitySensor != null) {
                     sensorManager.registerListener(proximityListener, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL, handler)
                 } else {
@@ -115,6 +149,9 @@ open class GestureSensorImpl(
 
     // --- BATTERY LOGIC ---
 
+    /**
+     * Suspends high-power sensors when the proximity sensor is covered (e.g., in pocket).
+     */
     private val proximityListener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         override fun onSensorChanged(event: SensorEvent?) {
@@ -127,12 +164,15 @@ open class GestureSensorImpl(
         }
     }
 
+    /**
+     * Puts the app into a ultra-low-power state, unregistering high-power sensors
+     * and relying on the hardware Significant Motion trigger to wake up.
+     */
     private val deepSleepRunnable = Runnable {
         if (shouldBeListening && significantMotionSensor != null) {
             isDeepSleeping = true
             unregisterHighPowerSensors()
 
-            // Wait for physical motion
             activeMotionListener = sensorManager.requestSignificantMotionTrigger(significantMotionSensor) {
                 exitDeepSleep()
             }
@@ -141,12 +181,11 @@ open class GestureSensorImpl(
 
     /**
      * Wakes the app from Deep Sleep state.
-     * Can be called by Motion Sensor OR Screen On event.
+     * Triggered by physical movement (Motion Sensor) or user interaction (Screen On).
      */
     private fun exitDeepSleep() {
         isDeepSleeping = false
         if (shouldBeListening) {
-            // Cancel any pending motion triggers since we are already awake
             sensorManager.cancelTriggerSensorSafe(activeMotionListener)
             activeMotionListener = null
 
@@ -155,6 +194,9 @@ open class GestureSensorImpl(
         }
     }
 
+    /**
+     * Standard registration for Accelerometer and Gyroscope using high-speed polling.
+     */
     private fun registerHighPowerSensors() {
         unregisterHighPowerSensors()
         if (accelerometer != null && gyroscope != null) {
@@ -174,9 +216,7 @@ open class GestureSensorImpl(
         try {
             val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
             context.registerReceiver(screenStateReceiver, filter)
-        } catch (e: Exception) {
-            // Already registered or permission issue
-        }
+        } catch (e: Exception) {}
     }
 
     private fun unregisterScreenReceiver() {
@@ -185,6 +225,9 @@ open class GestureSensorImpl(
         } catch (e: Exception) {}
     }
 
+    /**
+     * Stops all active sensor listeners and removes pending sleep callbacks.
+     */
     private fun stopAllSensors() {
         unregisterHighPowerSensors()
         unregisterScreenReceiver()
@@ -238,10 +281,17 @@ open class GestureSensorImpl(
 }
 
 // --- EXTENSIONS ---
+
+/**
+ * Safely cancels a TriggerEventListener for one-shot sensors.
+ */
 fun SensorManager.cancelTriggerSensorSafe(listener: TriggerEventListener?) {
     listener?.let { this.cancelTriggerSensor(it, null) }
 }
 
+/**
+ * Helper to request a Significant Motion trigger with a callback.
+ */
 fun SensorManager.requestSignificantMotionTrigger(sensor: Sensor?, onMotionDetected: () -> Unit): TriggerEventListener? {
     if (sensor == null) return null
     val listener = object : TriggerEventListener() {
