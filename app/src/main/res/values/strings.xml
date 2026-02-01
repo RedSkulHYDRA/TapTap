@@ -155,7 +155,7 @@
     <string name="add_gate_category_device">Device</string>
     <string name="add_gate_category_device_desc">React to device changes such as screen, charging and USB states</string>
     <string name="add_gate_category_sensors">Sensors</string>
-    <string name="add_gate_category_sensors_desc">React to sensor data, such as when the device is in your pocket, or flat on a table</string>
+    <string name="add_gate_category_sensors_desc">React to sensor data from the device</string>
     <string name="add_gate_category_audio">Audio</string>
     <string name="add_gate_category_audio_desc">React to audio-related events, such as being on call or playing music</string>
     <string name="add_gate_category_events">Apps</string>
@@ -455,9 +455,6 @@
     <string name="gate_charging_state">Charging</string>
     <string name="gate_charging_state_desc_a">Blocks gesture when the device is plugged in</string>
     <string name="gate_charging_state_desc_when_a">Run only when the device has just been plugged in</string>
-    <string name="gate_telephony_activity">On call</string>
-    <string name="gate_telephony_activity_desc">Blocks gesture when the device is on a call. Only standard calls are supported - not VoIP eg. WhatsApp</string>
-    <string name="gate_telephony_activity_desc_when">Run only when the device is on a call</string>
     <string name="gate_usb_state">USB device</string>
     <string name="gate_usb_state_desc_a">Blocks gesture when a USB device, such as a thumb drive, is plugged in</string>
     <string name="gate_usb_state_desc_when_a">Run only when a USB device has just been plugged in</string>
@@ -484,12 +481,6 @@
     <string name="gate_orientation_portrait">Portrait orientation</string>
     <string name="gate_orientation_portrait_desc">Blocks gesture when the phone is in portrait orientation</string>
     <string name="gate_orientation_portrait_desc_when">Run only when the device is in portrait orientation</string>
-    <string name="gate_table">Table</string>
-    <string name="gate_table_desc">Blocks the gesture when the device is placed down flat, for example on a table</string>
-    <string name="gate_table_desc_when">Run only when the device is flat, for example on a table</string>
-    <string name="gate_pocket">Pocket</string>
-    <string name="gate_pocket_desc">Blocks the gesture when the proximity sensor detects an object. This blocks the gesture when your device is in your pocket, or flipped on a table</string>
-    <string name="gate_pocket_desc_when">Run only when the proximity sensor detects an object. This happens when the device is in your pocket, or flipped on a table</string>
     <string name="gate_headset_inverse">No Headset</string>
     <string name="gate_headset_desc_inverse">Blocks the gesture when there is <b>no</b> wired or wireless headset connected. This is best used with the play/pause/skip controls to prevent music from playing over the speakers</string>
     <string name="gate_headset_desc_when_inverse">Run only when there is <b>no</b> wired or wireless headset connected</string>

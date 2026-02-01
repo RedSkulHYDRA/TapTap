@@ -426,9 +426,6 @@
     <string name="gate_charging_state">充电中</string>
     <string name="gate_charging_state_desc_a">当设备处于充电状态充电时，禁用手势</string>
     <string name="gate_charging_state_desc_when_a">仅在设备开始充电那一刻运行</string>
-    <string name="gate_telephony_activity">通话中</string>
-    <string name="gate_telephony_activity_desc">当设备处于通话状态时禁用手势，不支持 VoIP。如：WhatsApp</string>
-    <string name="gate_telephony_activity_desc_when">仅在设备处于通话状态时运行</string>
     <string name="gate_usb_state">USB 设备</string>
     <string name="gate_usb_state_desc_a">当一个 USB 设备，如U盘，被插入时禁用手势</string>
     <string name="gate_usb_state_desc_when_a">仅在设备插入 USB 设备那一刻运行</string>
@@ -454,12 +451,6 @@
     <string name="gate_orientation_portrait">竖屏</string>
     <string name="gate_orientation_portrait_desc">当设备处于竖屏时，暂时禁用手势</string>
     <string name="gate_orientation_portrait_desc_when">仅当设备处于竖屏时运行</string>
-    <string name="gate_table">平放</string>
-    <string name="gate_table_desc">当设备平放时，例如放在桌子上时，暂时禁用手势</string>
-    <string name="gate_table_desc_when">仅当设备平放时运行</string>
-    <string name="gate_pocket">口袋中</string>
-    <string name="gate_pocket_desc">当距离传感器检测到有物体时，暂时禁用手势。当您的设备放在口袋里或在桌子上翻转时，会禁用手势。</string>
-    <string name="gate_pocket_desc_when">仅当距离传感器检测到有物体时运行。当您的设备放在口袋里或在桌子上翻转时，会启用手势。</string>
     <string name="gate_headset_inverse">未连接耳机</string>
     <string name="gate_headset_desc_inverse">当<b>未连接到</b>有线或无线耳机时，暂时禁用手势。最好与播放/暂停/跳过控件配合使用，以防止通过扬声器播放音乐</string>
     <string name="gate_headset_desc_when_inverse">仅当<b>未连接到</b>有线或无线耳机时运行</string>

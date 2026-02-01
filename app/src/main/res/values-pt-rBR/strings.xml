@@ -13,8 +13,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">Carregando</string>
-    <string name="gate_telephony_activity">Durante uma ligação</string>
-    <string name="gate_telephony_activity_desc">Bloquear o gesto quando o dispositivo está em uma chamada de voz. Apenas ligações normais são suportadas - não funciona com VoIP, como no WhatsApp, por exemplo.</string>
     <string name="gate_usb_state">Dispositivo USB</string>
     <string name="gate_camera_visibility">Câmera</string>
     <string name="gate_camera_visibility_desc">Bloquear o gesto quando qualquer aplicativo de câmera é aberto. Aviso: Isso vai quebrar a funcionalidade de ignorar a ação "Iniciar câmera".</string>

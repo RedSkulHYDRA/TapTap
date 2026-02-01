@@ -424,9 +424,6 @@
     <string name="gate_charging_state">Зарядка</string>
     <string name="gate_charging_state_desc_a">Блокировать жест, когда устройство на зарядке</string>
     <string name="gate_charging_state_desc_when_a">Запускать на полсекунды после подключения к зарядке</string>
-    <string name="gate_telephony_activity">Во время вызова</string>
-    <string name="gate_telephony_activity_desc">Блокировать жест во время вызовов. Применимо только к обычным звонкам: в WhatsApp и прочих VoIP действовать не будет.</string>
-    <string name="gate_telephony_activity_desc_when">Запускать только в момент звонка</string>
     <string name="gate_usb_state">USB-устройство</string>
     <string name="gate_usb_state_desc_a">Блокировать жест при подключении USB-устройства, например флешки</string>
     <string name="gate_usb_state_desc_when_a">Запускать на полсекунды после подключения USB-устройства</string>
@@ -452,12 +449,6 @@
     <string name="gate_orientation_portrait">Книжная ориентация</string>
     <string name="gate_orientation_portrait_desc">Блокировать жест, когда экран зафиксирован в вертикальном положении</string>
     <string name="gate_orientation_portrait_desc_when">Запускать только когда экран зафиксирован в вертикальном положении</string>
-    <string name="gate_table">На столе</string>
-    <string name="gate_table_desc">Блокировать жест, когда устройство лежит на плоской поверхности, например на столе</string>
-    <string name="gate_table_desc_when">Запускать только когда устройство лежит на плоской поверхности, например на столе</string>
-    <string name="gate_pocket">В кармане</string>
-    <string name="gate_pocket_desc">Блокирует жест, когда датчик приближения зафиксировал объект перед устройством. Из-за этого жест заблокируется, когда устройство находится в кармане или лежит на столе экраном вниз</string>
-    <string name="gate_pocket_desc_when">Запускать только когда датчик приближения зафиксировал объект перед устройством. Жест будет срабатывать, когда устройство находится в кармане или лежит на столе экраном вниз</string>
     <string name="gate_headset_inverse">Без гарнитуры</string>
     <string name="gate_headset_desc_inverse">Блокировать жест, когда (бес)проводная гарнитура <b>не</b> подключена. Лучше всего совмещать с действиями по управлению музыкой, чтобы предотвратить нежелательный вывод звука через динамики</string>
     <string name="gate_headset_desc_when_inverse">Запускать только когда (бес)проводная гарнитура <b>не</b> подключена.</string>

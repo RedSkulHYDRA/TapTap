@@ -18,11 +18,8 @@ import com.kieronquinn.app.taptap.components.columbus.gates.custom.LowBatteryGat
 import com.kieronquinn.app.taptap.components.columbus.gates.custom.MusicGate
 import com.kieronquinn.app.taptap.components.columbus.gates.custom.MusicInverseGate
 import com.kieronquinn.app.taptap.components.columbus.gates.custom.OrientationGate
-import com.kieronquinn.app.taptap.components.columbus.gates.custom.PocketDetectionGate
 import com.kieronquinn.app.taptap.components.columbus.gates.custom.PowerStateGate
 import com.kieronquinn.app.taptap.components.columbus.gates.custom.PowerStateInverseGate
-import com.kieronquinn.app.taptap.components.columbus.gates.custom.TableDetectionGate
-import com.kieronquinn.app.taptap.components.columbus.gates.custom.TelephonyActivityGate
 import com.kieronquinn.app.taptap.components.columbus.gates.custom.UsbStateGate
 import com.kieronquinn.app.taptap.models.action.TapTapActionDirectory
 
@@ -111,15 +108,6 @@ enum class TapTapGateDirectory(
         R.string.gate_camera_visibility_desc_when,
         gateRequirement = arrayOf(GateRequirement.Accessibility)
     ),
-    TELEPHONY_ACTIVITY(
-        TelephonyActivityGate::class.java,
-        TapTapGateCategory.AUDIO,
-        R.string.gate_telephony_activity,
-        R.string.gate_telephony_activity_desc,
-        R.drawable.ic_gate_telephony_activity,
-        R.string.gate_telephony_activity_desc_when,
-        gateRequirement = arrayOf(GateRequirement.ReadPhoneStatePermission)
-    ),
     APP_SHOWING(
         AppVisibilityGate::class.java,
         TapTapGateCategory.EVENTS,
@@ -156,22 +144,6 @@ enum class TapTapGateDirectory(
         R.string.gate_orientation_portrait_desc,
         R.drawable.ic_gate_orientation,
         R.string.gate_orientation_portrait_desc_when
-    ),
-    TABLE(
-        TableDetectionGate::class.java,
-        TapTapGateCategory.SENSORS,
-        R.string.gate_table,
-        R.string.gate_table_desc,
-        R.drawable.ic_gate_table,
-        R.string.gate_table_desc_when
-    ),
-    POCKET(
-        PocketDetectionGate::class.java,
-        TapTapGateCategory.SENSORS,
-        R.string.gate_pocket,
-        R.string.gate_pocket_desc,
-        R.drawable.ic_gate_pocket,
-        R.string.gate_pocket_desc_when
     ),
     HEADSET(
         HeadsetGate::class.java,

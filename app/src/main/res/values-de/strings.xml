@@ -455,9 +455,6 @@
     <string name="gate_charging_state">Ladevorgang</string>
     <string name="gate_charging_state_desc_a">Blockiert Gesten, während dein Gerät auflädt.</string>
     <string name="gate_charging_state_desc_when_a">Nur während dem Aufladen ausführen.</string>
-    <string name="gate_telephony_activity">Während dem Anruf</string>
-    <string name="gate_telephony_activity_desc">Blockiert Gesten, während eines Anrufs.\nNur standard Telefonapps werden unterstützt, keine VoIP Telefonate (z.B. WhatsApp).</string>
-    <string name="gate_telephony_activity_desc_when">Nur während eines Anrufs ausführen.</string>
     <string name="gate_usb_state">USB-Geräte</string>
     <string name="gate_usb_state_desc_a">Blockiert Gesten, während ein USB-Gerät (z.B. USB-Stick) angesteckt ist.</string>
     <string name="gate_usb_state_desc_when_a">Nur ausführen, wenn ein USB-Gerät eingesteckt ist.</string>
@@ -484,12 +481,6 @@
     <string name="gate_orientation_portrait">Hochformat</string>
     <string name="gate_orientation_portrait_desc">Blockiert Gesten, wenn das Gerät im Hochformat gehalten wird.</string>
     <string name="gate_orientation_portrait_desc_when">Nur ausführen, wenn das Gerät im Hochformat gehalten wird.</string>
-    <string name="gate_table">Auf dem Tisch</string>
-    <string name="gate_table_desc">Blockiert Gesten, wenn das Gerät flach (z.B. auf dem Tisch) liegt.</string>
-    <string name="gate_table_desc_when">Nur ausführen, wenn das Gerät flach (z.B. auf dem Tisch) liegt.</string>
-    <string name="gate_pocket">In der Tasche</string>
-    <string name="gate_pocket_desc">Blockiert Gesten, wenn der Näherungssender ein Objekt erkennt.\nDadurch werden Gesten blockiert, wenn sich dein Gerät in deiner Tasche befindet oder mit dem Bildschirm nach unten auf dem Tisch liegt.</string>
-    <string name="gate_pocket_desc_when">Nur ausführen, wenn der Näherungssensor ein Objekt erkennt.\nDas passiert, wenn sich das Gerät in deiner Tasche befindet oder mit dem Bildschirm nach unten auf einem Tisch liegt.</string>
     <string name="gate_headset">Kopfhörer</string>
     <string name="gate_headset_desc">Blockiert Gesten, wenn Kopfhörer <b>verbunden</b> sind.</string>
     <string name="gate_headset_desc_when">Nur ausführen, wenn Kopfhörer <b>verbunden</b> sind.</string>

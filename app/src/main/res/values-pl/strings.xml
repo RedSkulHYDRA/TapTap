@@ -13,8 +13,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">Ładowanie</string>
-    <string name="gate_telephony_activity">Podczas rozmowy</string>
-    <string name="gate_telephony_activity_desc">Blokuje gest, gdy urządzienie jest w trakcie połączenia. Obsługiwane są zwykłe połączenia - nie VoIP, np. WhatsApp</string>
     <string name="gate_usb_state">Urządzenie USB</string>
     <string name="gate_camera_visibility">Aparat</string>
     <string name="gate_camera_visibility_desc">Blokuje gest po otwarciu dowolnej aplikacji aparatu. Uwaga: Może spowodować problem z akcją Uruchom aparat</string>

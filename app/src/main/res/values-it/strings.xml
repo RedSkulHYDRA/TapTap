@@ -16,8 +16,6 @@
     <string name="setting_feedback_wake">Risveglia il dispositivo</string>
     <string name="setting_feedback_wake_desc">Risveglia il dispositivo quando lo schermo è spento</string>
     <string name="gate_charging_state">In carica</string>
-    <string name="gate_telephony_activity">In chiamata</string>
-    <string name="gate_telephony_activity_desc">Blocca i gesti quando il dispositivo è in chiamata. Solamente le chiamate standard sono supportate - non le chiamate VoIP es. WhatsApp</string>
     <string name="gate_usb_state">Dispositivo USB</string>
     <string name="gate_camera_visibility">Fotocamera</string>
     <string name="gate_camera_visibility_desc">Blocca i gesti quando viene aperta la Fotocamera. Nota: Questa impostazione renderà inutilizzabile l\'azione per lanciare la Fotocamera.</string>
@@ -116,7 +114,6 @@
     <string name="setting_actions_double">Azioni doppio tocco</string>
     <string name="setting_actions_triple">Azioni triplo tocco</string>
     <string name="settings_actions_desc_double">Imposta le azioni che devono essere eseguite quando fai un doppio tocco sul retro del tuo dispositivo</string>
-    <string name="gate_telephony_activity_desc_when">Esegui solo quando il dispositivo è in chiamata</string>
     <string name="gate_camera_visibility_desc_when">Esegui solo quando l\'app della fotocamera è aperta</string>
     <string name="gate_power_state_desc_when">Esegui solo quando lo schermo è spento</string>
     <string name="gate_power_state_inverse_desc_when">Esegui solo quando lo schermo è acceso</string>
@@ -144,10 +141,6 @@
     <string name="gate_music_inverse">Nessuna musica in riproduzione</string>
     <string name="gate_orientation_landscape_desc_when">Esegui solo quando il telefono è in orizzontale</string>
     <string name="gate_orientation_portrait_desc_when">Esegui solo quando il telefono è in verticale</string>
-    <string name="gate_pocket">Tasca</string>
-    <string name="gate_table">Tavolo</string>
-    <string name="gate_table_desc">Blocca la gesture quando il dispositivo è su una superficie piana, ad esempio un tavolo.</string>
-    <string name="gate_table_desc_when">Esegui solo quando il dispositivo è su una superficie piana, ad esempio un tavolo.</string>
     <string name="setting_advanced">Avanzate</string>
     <string name="setting_advanced_desc">Impostazioni avanzate e trucchi per migliorare le performance e altro</string>
     <string name="setting_advanced_restart_service">Servizio di riavvio automatico</string>
@@ -165,8 +158,6 @@
     <string name="gate_music">Musica in riproduzione</string>
     <string name="help_action">Le Azioni sono dei task che vengono eseguiti quando tocchi il retro del tuo telefono due volte. Le Azioni vengono eseguite in ordine, come mostrate nella lista - dall\'alto verso il basso, e solamente se i requisiti sono rispettati. Tocca per più informazioni.</string>
     <string name="bs_help_action">Le Azioni sono dei task che vengono eseguiti quando tocchi il retro del tuo telefono due volte. Le Azioni vengono eseguite in ordine, come mostrate nella lista - dall\'alto verso il basso. Se una azione non può essere eseguita correttamente, nessun\'altra verrà eseguita. Però se una azione non è disponibile (es. se l\'assistente per l\'azione Lancia Assistente Google è già in uso oppure i requisiti non sono rispettati), verrà eseguita l\'azione successiva sotto di essa e così via fino a quando non verrà eseguita correttamente.</string>
-    <string name="gate_pocket_desc">Blocca la gesture quando il sensore di prossimità rileva un oggetto. Questo blocca la gesture quando, ad esempio il tuo dispositivo è nella tua tasca, oppure quando sul tavolo con lo schermo verso il basso</string>
-    <string name="gate_pocket_desc_when">Esegui solo quando il sensore di prossimità rileva un oggetto. Questo accade quando il dispositivo è nella tua tasca, oppure quando sul tavolo con lo schermo verso il basso</string>
     <string name="gate_music_desc">Blocca la gesture quando c\'è la musica in riproduzione</string>
     <string name="gate_music_desc_when">Esegui solo quando c\'è la musica in riproduzione</string>
     <string name="gate_music_desc_when_inverse">Esegui solo quando non c\'è la musica in riproduzione</string>

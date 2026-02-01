@@ -61,9 +61,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">En train de charger</string>
-    <string name="gate_telephony_activity">En appel</string>
-    <string name="gate_telephony_activity_desc">Bloque le geste quand l\'appreil est en cours d\'appel. Seuls les stardards sont supportés - les VoIP, comme WhatsApp, ne le sont pas</string>
-    <string name="gate_telephony_activity_desc_when">Lance le geste seulement quand un appel est en cours</string>
     <string name="gate_usb_state">Appareil USB</string>
     <string name="gate_camera_visibility">Caméra</string>
     <string name="gate_camera_visibility_desc">Bloque le geste quand la caméra est activée. Note: Cela empêche l\'action Lancer la Caméra.</string>
@@ -181,12 +178,6 @@
     <string name="gate_orientation_portrait_desc">Bloque le geste quand le téléphone est en mode portrait</string>
     <string name="gate_orientation_landscape_desc_when">Lance le geste seulement quand l\'appareil est en mode paysage</string>
     <string name="gate_orientation_portrait_desc_when">Lance le geste seulement quand l\'appareil est en mode portrait</string>
-    <string name="gate_table">Table</string>
-    <string name="gate_table_desc">Bloque le geste quand le téléphone est posé à plat, par exemple sur une table</string>
-    <string name="gate_table_desc_when">Lance le geste seulement quand le téléphone est posé à plat, par exemple sur une table</string>
-    <string name="gate_pocket">Poche</string>
-    <string name="gate_pocket_desc">Bloque le geste quand le capteur de proximité détecte un objet. Cela bloque le geste quand votre appareil est dans votre poche, ou retourné sur une table</string>
-    <string name="gate_pocket_desc_when">Lance le geste seulement quand le capteur de proximité détecte un objet. Cela lance le geste seulement quand votre appareil est dans votre poche, ou retourné sur une table</string>
     <string name="gate_headset_inverse">Pas d\'écouteurs</string>
     <string name="gate_headset_desc_inverse">Bloque le geste quand <b>il n\'y a pas</b> d\'écouteurs avec ou sans-fil connecté. Cela peut être utilisé avec les contrôles lecture/pause/passer pour éviter que la musique ne se joue en-dehors des écouteurs</string>
     <string name="gate_headset_desc_when_inverse">Lance le geste seulement quand <b>il n\'y a pas</b> d\'écouteurs avec ou sans-fil connecté</string>

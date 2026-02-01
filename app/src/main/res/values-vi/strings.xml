@@ -13,8 +13,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">Trong khi sạc</string>
-    <string name="gate_telephony_activity">Trong cuộc gọi</string>
-    <string name="gate_telephony_activity_desc">Chặn cử chỉ khi đang trong cuộc gọi. Chỉ hỗ trợ cuộc gọi tiêu chuẩn - không hỗ trợ VoIP, ví dụ: Zalo</string>
     <string name="gate_usb_state">Thiết bị USB</string>
     <string name="gate_camera_visibility">Máy ảnh</string>
     <string name="gate_camera_visibility_desc">Chặn cử chỉ khi mở bất kỳ ứng dụng máy ảnh nào. Lưu ý: Điều này sẽ làm hỏng tính năng bỏ qua nêu máy ảnh đang chạy của hành động \"Bật máy ảnh\".</string>

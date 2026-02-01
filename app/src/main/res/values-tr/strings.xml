@@ -22,9 +22,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">Şarj</string>
-    <string name="gate_telephony_activity">Arama</string>
-    <string name="gate_telephony_activity_desc">Cihaz bir aramadayken hareketi engeller. Yalnızca standart aramalar desteklenir - WhatsApp gibi uygulamalar değil</string>
-    <string name="gate_telephony_activity_desc_when">Yalnızca cihaz bir aramadayken çalıştır</string>
     <string name="gate_usb_state">USB aygıtı</string>
     <string name="gate_camera_visibility">Kamera</string>
     <string name="gate_camera_visibility_desc">Herhangi bir kamera uygulaması açıldığında hareketi engeller. Not: Bu, Kamerayı Başlat eyleminin atlama işlevini bozacaktır.</string>
@@ -143,12 +140,6 @@
     <string name="gate_orientation_portrait">Dikey yönlendirme</string>
     <string name="gate_orientation_portrait_desc">Telefon dikey yöndeyken hareketi engeller</string>
     <string name="gate_orientation_portrait_desc_when">Yalnızca cihaz dikey yöndeyken çalıştır</string>
-    <string name="gate_table">Masa</string>
-    <string name="gate_table_desc">Cihaz düz bir yere, örneğin bir masaya yerleştirildiğinde hareketi engeller</string>
-    <string name="gate_table_desc_when">Yalnızca cihaz düz olduğunda, örneğin bir masa üzerinde çalıştır</string>
-    <string name="gate_pocket">Cep</string>
-    <string name="gate_pocket_desc">Yakınlık sensörü bir nesne algıladığında hareketi engeller. Bu, cihazınız cebinizdeyken veya bir masaya ters koyulduğunda hareketi engeller</string>
-    <string name="gate_pocket_desc_when">Yalnızca yakınlık sensörü bir nesne algıladığında çalıştır. Bu, cihaz cebinizde olduğunda veya bir masaya ters koyulduğunda gerçekleşir</string>
     <string name="gate_headset_inverse">Kulaklık Yok</string>
     <string name="gate_headset_desc_inverse">Bağlı kablolu veya kablosuz kulaklık <b>olmadığında</b> hareketi engeller. Bu, müziğin hoparlörlerden çalınmasını önlemek için en iyi oynatma/duraklatma/atlama kontrolleriyle birlikte kullanılır</string>
     <string name="gate_headset_desc_when_inverse">Yalnızca bağlı kablolu veya kablosuz kulaklık <b>olmadığında</b> çalıştır</string>

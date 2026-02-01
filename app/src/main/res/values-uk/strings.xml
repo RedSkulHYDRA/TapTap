@@ -13,8 +13,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">Зарядка</string>
-    <string name="gate_telephony_activity">Під час дзвінка</string>
-    <string name="gate_telephony_activity_desc">Блокує жест, під час дзвінка. Підтримуються тільки стандартні дзвінки, а не VoIP, наприклад WhatsApp</string>
     <string name="gate_usb_state">USB-пристрій</string>
     <string name="gate_camera_visibility">Камера</string>
     <string name="gate_camera_visibility_desc">Блокує жест при відкритті будь-якого додатку камери. Примітка: це порушить функціональність пропуску дії \"Запустити камеру\".</string>

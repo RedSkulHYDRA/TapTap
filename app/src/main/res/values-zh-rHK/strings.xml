@@ -13,8 +13,6 @@
 
     <!-- Gates -->
     <string name="gate_charging_state">充電時</string>
-    <string name="gate_telephony_activity">通話時</string>
-    <string name="gate_telephony_activity_desc">當手機通話時，停用手勢. 僅支援標準電話 - 不支援網路電話 如.WhatsApp.</string>
     <string name="gate_usb_state">USB 設備</string>
     <string name="gate_camera_visibility">相機</string>
     <string name="gate_camera_visibility_desc">當相機啟動時停用手勢. 注意：這將在執行動作時跳過「啟動相機」動作.</string>
