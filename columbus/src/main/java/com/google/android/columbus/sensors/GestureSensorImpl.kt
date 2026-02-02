@@ -44,7 +44,7 @@ open class GestureSensorImpl(
      * Batching latency in microseconds. Set to a non-zero value to allow the
      * Hardware Sensor Hub to buffer events, reducing CPU wake-ups.
      */
-    private val MAX_REPORT_LATENCY = 100000
+    private val MAX_REPORT_LATENCY = 10000
 
     // --- SENSORS & MANAGERS ---
     private val handler = Handler(Looper.getMainLooper())
@@ -83,16 +83,20 @@ open class GestureSensorImpl(
      */
     private val screenStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            if (intent?.action == Intent.ACTION_SCREEN_ON) {
-                val powerManager = ctx?.getSystemService(Context.POWER_SERVICE) as? PowerManager
-                // isInteractive checks if the screen is on due to user intent
-                // vs just a notification (results vary by OEM, but it's a good filter)
-                if (powerManager?.isInteractive == true) {
+            val powerManager = ctx?.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            when (intent?.action) {
+                Intent.ACTION_USER_PRESENT -> {
                     exitDeepSleep()
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    if (powerManager?.isInteractive == true) {
+                        exitDeepSleep()
+                    }
                 }
             }
         }
     }
+
     open inner class GestureSensorEventListener: SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
@@ -169,13 +173,18 @@ open class GestureSensorImpl(
      * and relying on the hardware Significant Motion trigger to wake up.
      */
     private val deepSleepRunnable = Runnable {
-        if (shouldBeListening && significantMotionSensor != null) {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val isScreenOn = pm.isInteractive
+
+        if (shouldBeListening && significantMotionSensor != null && !isScreenOn) {
             isDeepSleeping = true
             unregisterHighPowerSensors()
 
             activeMotionListener = sensorManager.requestSignificantMotionTrigger(significantMotionSensor) {
                 exitDeepSleep()
             }
+        } else if (isScreenOn) {
+            resetDeepSleepTimer()
         }
     }
 
@@ -214,7 +223,9 @@ open class GestureSensorImpl(
 
     private fun registerScreenReceiver() {
         try {
-            val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
+            val filter = IntentFilter()
+            filter.addAction(Intent.ACTION_SCREEN_ON)
+            filter.addAction(Intent.ACTION_USER_PRESENT)
             context.registerReceiver(screenStateReceiver, filter)
         } catch (e: Exception) {}
     }
