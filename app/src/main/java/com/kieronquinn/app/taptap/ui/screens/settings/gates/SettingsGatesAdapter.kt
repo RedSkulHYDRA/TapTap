@@ -165,13 +165,13 @@ class SettingsGatesAdapter(
 
     fun removeSelectedItem(): Int? {
         val selectedItemIndex = items.indexOfFirst { it is SettingsGatesItem.Gate && it.isSelected }
-        val selectedItem = items[selectedItemIndex] as SettingsGatesItem.Gate
         if (selectedItemIndex == -1) return null
+        val selectedItem = items[selectedItemIndex] as? SettingsGatesItem.Gate
+        val id = selectedItem?.gate?.id
         items.removeAt(selectedItemIndex)
         notifyItemRemoved(selectedItemIndex)
-        return selectedItem.gate.id
+        return id
     }
-
     fun moveItem(indexFrom: Int, indexTo: Int): Boolean {
         if (indexFrom < indexTo) {
             for (i in indexFrom until indexTo) {

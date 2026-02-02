@@ -255,6 +255,8 @@ class ActionsRepositoryImpl(
 
     override suspend fun moveDoubleTapAction(fromIndex: Int, toIndex: Int) {
         actionsQueue.add(ActionsAction.ActionsDoubleListRequiringAction { actions ->
+            if (fromIndex !in actions.indices || toIndex !in actions.indices) return@ActionsDoubleListRequiringAction
+
             if (fromIndex < toIndex) {
                 for (i in fromIndex until toIndex) {
                     Collections.swap(actions, i, i + 1)
@@ -273,6 +275,8 @@ class ActionsRepositoryImpl(
 
     override suspend fun moveTripleTapAction(fromIndex: Int, toIndex: Int) {
         actionsQueue.add(ActionsAction.ActionsTripleListRequiringAction { actions ->
+            if (fromIndex !in actions.indices || toIndex !in actions.indices) return@ActionsTripleListRequiringAction
+
             if (fromIndex < toIndex) {
                 for (i in fromIndex until toIndex) {
                     Collections.swap(actions, i, i + 1)
@@ -288,7 +292,6 @@ class ActionsRepositoryImpl(
             }
         })
     }
-
     @SuppressLint("InlinedApi")
     override fun isActionDataSatisfied(
         context: Context,

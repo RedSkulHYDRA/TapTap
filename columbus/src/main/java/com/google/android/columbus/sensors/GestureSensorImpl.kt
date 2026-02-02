@@ -32,7 +32,7 @@ open class GestureSensorImpl(
      * Duration of inactivity (in ms) before the high-power sensors are suspended
      * to enter a Deep Sleep state.
      */
-    private val DEEP_SLEEP_TIMEOUT_MS = 60000L
+    private val DEEP_SLEEP_TIMEOUT_MS = 30000L
 
     /**
      * 0 = SENSOR_DELAY_FASTEST. Essential for the TensorFlow model to receive
