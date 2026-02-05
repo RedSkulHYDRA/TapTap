@@ -1,6 +1,7 @@
 package com.kieronquinn.app.taptap.service.accessibility
 
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
 import com.kieronquinn.app.taptap.components.accessibility.TapTapAccessibilityRouter
 import com.kieronquinn.app.taptap.utils.extensions.whenCreated
 import com.kieronquinn.app.taptap.utils.lifecycle.LifecycleAccessibilityService
@@ -24,6 +25,7 @@ class TapTapAccessibilityService: LifecycleAccessibilityService() {
 
     private var isNotificationShadeOpen = false
     private var isQuickSettingsOpen = false
+    private var isKeyboardVisible = false
 
     private val notificationShadeAccessibilityDesc by lazy {
         val default = "Notification shade."
@@ -76,7 +78,21 @@ class TapTapAccessibilityService: LifecycleAccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if(event == null) return
-        if(event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+
+        // Handle window state changes
+        if(event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            handleWindowStateChange(event)
+        }
+
+        // Check keyboard visibility on any relevant event
+        if(event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+            event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
+            event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+            checkKeyboardVisibility()
+        }
+    }
+
+    private fun handleWindowStateChange(event: AccessibilityEvent) {
         val isNotificationShade = event.text?.firstOrNull() == notificationShadeAccessibilityDesc
         val isQuickSettings = event.text?.firstOrNull() == quickSettingsAccessibilityDesc
         var currentPackageName = this.currentPackageName
@@ -91,18 +107,43 @@ class TapTapAccessibilityService: LifecycleAccessibilityService() {
                 router.postOutput(TapTapAccessibilityRouter.AccessibilityOutput.AppOpen(currentPackageName))
             }
             if(isNotificationShade && EVENT_TYPES_SHADE_OPEN.contains(event.contentChangeTypes)){
+                this@TapTapAccessibilityService.isNotificationShadeOpen = true
                 router.postOutput(TapTapAccessibilityRouter.AccessibilityOutput.NotificationShadeState(true))
             }
             if(isNotificationShade && EVENT_TYPES_SHADE_CLOSED.contains(event.contentChangeTypes)){
+                this@TapTapAccessibilityService.isNotificationShadeOpen = false
                 router.postOutput(TapTapAccessibilityRouter.AccessibilityOutput.NotificationShadeState(false))
                 router.postOutput(TapTapAccessibilityRouter.AccessibilityOutput.QuickSettingsShadeState(false))
             }
             if(isQuickSettings && EVENT_TYPES_SHADE_OPEN.contains(event.contentChangeTypes)){
+                this@TapTapAccessibilityService.isQuickSettingsOpen = true
                 router.postOutput(TapTapAccessibilityRouter.AccessibilityOutput.QuickSettingsShadeState(true))
             }
             if(isQuickSettings && EVENT_TYPES_SHADE_CLOSED.contains(event.contentChangeTypes)){
+                this@TapTapAccessibilityService.isQuickSettingsOpen = false
                 router.postOutput(TapTapAccessibilityRouter.AccessibilityOutput.QuickSettingsShadeState(false))
             }
+        }
+    }
+
+    private fun checkKeyboardVisibility() {
+        try {
+            val windows = windows ?: return
+            val isKeyboardVisible = windows.any { window ->
+                window.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+            }
+
+            // Only post update if the state has changed
+            if(this.isKeyboardVisible != isKeyboardVisible) {
+                this.isKeyboardVisible = isKeyboardVisible
+                lifecycle.whenCreated {
+                    router.postOutput(
+                        TapTapAccessibilityRouter.AccessibilityOutput.KeyboardVisibilityState(isKeyboardVisible)
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            // Silently fail - keyboard detection may not be available on all devices
         }
     }
 

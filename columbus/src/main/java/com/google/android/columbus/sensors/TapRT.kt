@@ -1,5 +1,6 @@
 package com.google.android.columbus.sensors
 
+import android.util.Log
 import com.kieronquinn.app.shared.taprt.BaseTapRT
 import java.util.*
 
@@ -42,15 +43,25 @@ open class TapRT(
         var startIndex = start
         val iterator = vector.iterator()
         var index = 0
+        if (start >= _fv.size) {
+            Log.w("TapRT", "addToFeatureVector: start index $start >= feature vector size ${_fv.size}, skipping")
+            return
+        }
+
         while(iterator.hasNext()) {
             if(index < size) {
                 iterator.next()
-            }else{
+            } else {
                 if(index >= _sizeFeatureWindow + size) {
                     return
                 }
                 val featureVector = _fv
                 val next = iterator.next()
+                if (startIndex >= featureVector.size) {
+                    Log.w("TapRT", "addToFeatureVector: Reached bounds limit at index $startIndex (size: ${featureVector.size})")
+                    return
+                }
+
                 featureVector[startIndex] = next
                 startIndex++
             }
@@ -158,7 +169,16 @@ open class TapRT(
     }
 
     fun recognizeTapML() {
+        if (_fv.size != _numberFeature) {
+            _fv = ArrayList(_numberFeature)
+            for (i in 0 until _numberFeature) {
+                _fv.add(0f)
+            }
+        }
+
         val resampleInterval = _resampleAcc.getInterval()
+        if (resampleInterval == 0L) return
+
         val resampleT = ((_resampleAcc.results.t - _resampleGyro.results.t) / resampleInterval).toInt()
         val majorPeakId = _peakDetectorPositive.getIdMajorPeak()
         if (majorPeakId > mFrameAlignPeak) {

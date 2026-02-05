@@ -25,6 +25,7 @@ interface TapTapAccessibilityRouter {
         data class AppOpen(val packageName: String): AccessibilityOutput()
         data class NotificationShadeState(val open: Boolean): AccessibilityOutput()
         data class QuickSettingsShadeState(val open: Boolean): AccessibilityOutput()
+        data class KeyboardVisibilityState(val visible: Boolean): AccessibilityOutput()
     }
 
     val accessibilityInputBus: Flow<AccessibilityInput>
