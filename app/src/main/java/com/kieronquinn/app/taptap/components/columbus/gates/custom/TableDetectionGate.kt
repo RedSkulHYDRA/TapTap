@@ -18,7 +18,7 @@ import kotlin.math.sqrt
 class TableDetectionGate(
     serviceLifecycle: Lifecycle,
     context: Context,
-    private val motionThreshold: Float = 0.8f
+    private val motionThreshold: Float = 1.0f
 ) : TapTapGate(serviceLifecycle, context), SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -43,35 +43,29 @@ class TableDetectionGate(
         private const val TAG = "TableDetectionGate"
         private const val MOTION_HISTORY_SIZE = 5
         private const val STATIONARY_TIMEOUT_MS = 30000L // 30 Seconds
+        private const val SAMPLE_RATE_MICROS = 1_000_000 // 1Hz
     }
 
-    /**
-     * Runnable that executes ONLY when the device has been still for 30s.
-     * It disables gesture detection to save power.
-     */
     private val stationaryRunnable = Runnable {
         if (!isStationary) {
             Log.d(TAG, "Timeout reached: Device is stationary. Blocking gestures.")
             isStationary = true
-            notifyListeners() // Updates the Service: Gate is now BLOCKED
+            notifyListeners()
         }
     }
 
     override fun onActivate() {
         Log.d(TAG, "Activating Table Gate")
-        this.handlerThread = HandlerThread("TableGateThread")
-        this.handlerThread.start()
-        this.handler = Handler(this.handlerThread.looper)
+        handlerThread = HandlerThread("TableGateThread")
+        handlerThread.start()
+        handler = Handler(handlerThread.looper)
 
-        // OPTIMIZATION: Start in "Unblocked" state so gestures work immediately
         isStationary = false
         isFirstReading = true
         motionHistory.clear()
+        smoothedMotion = 0f // ADDED: Reset smoothed value
 
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL, handler)
-
-        // Start the countdown immediately. If the user doesn't move the phone,
-        // it will block itself in 30 seconds.
+        sensorManager.registerListener(this, accelerometer, SAMPLE_RATE_MICROS, handler)
         handler.postDelayed(stationaryRunnable, STATIONARY_TIMEOUT_MS)
     }
 
@@ -79,18 +73,20 @@ class TableDetectionGate(
         Log.d(TAG, "Deactivating Table Gate")
         sensorManager.unregisterListener(this)
 
-        // Cleanup callbacks to prevent memory leaks
         if (::handler.isInitialized) {
-            handler.removeCallbacks(stationaryRunnable)
+            handler.removeCallbacksAndMessages(null) // CHANGED: Clear all callbacks at once
         }
 
-        handlerThread.quitSafely()
+        if (::handlerThread.isInitialized) {
+            handlerThread.quitSafely()
+        }
+
         motionHistory.clear()
         isFirstReading = true
+        smoothedMotion = 0f // ADDED: Reset state
     }
 
     override fun isBlocked(): Boolean {
-        // Returns TRUE (Blocked) when stationary to disable gestures
         return isStationary
     }
 
@@ -98,51 +94,38 @@ class TableDetectionGate(
     override fun onSensorChanged(event: SensorEvent?) {
         val values = event?.values ?: return
 
-        // --- 1. Calculate Raw Motion ---
+        // Calculate motion delta
         val motion = if (isFirstReading) {
-            lastAccelValues = values.clone()
+            lastAccelValues = values.copyOf() // CHANGED: copyOf() is more idiomatic
             isFirstReading = false
             0f
         } else {
             val deltaX = values[0] - lastAccelValues[0]
             val deltaY = values[1] - lastAccelValues[1]
             val deltaZ = values[2] - lastAccelValues[2]
-
-            lastAccelValues = values.clone()
+            lastAccelValues = values.copyOf()
             sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
         }
 
-        // --- 2. Smooth the Data ---
+        // Smooth the data
         motionHistory.add(motion)
         if (motionHistory.size > MOTION_HISTORY_SIZE) {
             motionHistory.removeFirst()
         }
-        smoothedMotion = if (motionHistory.isNotEmpty()) motionHistory.average().toFloat() else 0f
+        smoothedMotion = motionHistory.average().toFloat()
 
-        // --- 3. State Machine Logic ---
-
+        // State machine
         if (smoothedMotion > motionThreshold) {
-            // === MOTION DETECTED (Device moved) ===
+            // Motion detected
+            handler.removeCallbacks(stationaryRunnable)
 
-            // A. Cancel the "Go to Sleep" timer immediately
-            // (Using hasCallbacks check to avoid unnecessary object creation/overhead)
-            if (handler.hasCallbacks(stationaryRunnable)) {
-                handler.removeCallbacks(stationaryRunnable)
-            }
-
-            // B. If we were blocked (stationary), WAKE UP immediately
             if (isStationary) {
-                Log.d(TAG, "Motion detected ($smoothedMotion) > Threshold. Unblocking.")
+                Log.d(TAG, "Motion detected ($smoothedMotion). Unblocking.")
                 isStationary = false
-                notifyListeners() // Updates the Service: Gate is now OPEN
+                notifyListeners()
             }
         } else {
-            // === NO MOTION (Device still) ===
-
-            // We only start the timer if:
-            // 1. We are currently "Awake" (!isStationary)
-            // 2. The timer isn't ALREADY running (!hasCallbacks)
-            // This prevents the infinite reset bug.
+            // No motion - schedule sleep if not already scheduled
             if (!isStationary && !handler.hasCallbacks(stationaryRunnable)) {
                 Log.v(TAG, "Motion stopped. Scheduling sleep in 30s.")
                 handler.postDelayed(stationaryRunnable, STATIONARY_TIMEOUT_MS)

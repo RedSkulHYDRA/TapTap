@@ -36,18 +36,21 @@ class TapTapColumbusService(
     actions, effects, gates, gestureController.gestureSensor, powerManager
 ) {
 
+    companion object {
+        private const val TAG = "Columbus/Service"
+        private const val WAKE_LOCK_TIMEOUT_MS = 2000L
+    }
+
+    private var lastActiveTripleAction: Action? = null
+
     init {
         scope.runOnClose {
             //Stops listening
             updateSensorListener()
         }
+        gestureController.setGestureListener(TripleTapCapableGestureListener())
+        updateSensorListener()
     }
-
-    companion object {
-        private const val TAG = "Columbus/Service"
-    }
-
-    private var lastActiveTripleAction: Action? = null
 
     inner class TripleTapCapableGestureListener : GestureController.GestureListener {
         override fun onGestureDetected(
@@ -55,51 +58,50 @@ class TapTapColumbusService(
             flags: Int,
             detectionProperties: GestureSensor.DetectionProperties
         ) {
+            // Acquire wake lock for all gesture detections
             if (flags != 0) {
-                wakeLock.acquire(2000L)
+                wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS)
             }
 
-            if (flags == 3) {
-                if(blockingGate() != null) return
-                //Triple tap
-                val action = updateActiveTripleAction()
-                if (action != null) {
-                    action.onGestureDetected(flags, detectionProperties)
-                    effects.forEach {
-                        it.onGestureDetected(flags, detectionProperties)
-                    }
+            // Check blocking gates ONCE before processing
+            if (blockingGate() != null) {
+                if (wakeLock.isHeld()) {
+                    wakeLock.release()
                 }
+                return
+            }
+
+            // Determine which action to use based on tap count
+            val action = if (flags == 3) {
+                updateActiveTripleAction()
             } else {
-                if(blockingGate() != null) return
-                val action = updateActiveAction()
-                if (action != null) {
-                    action.onGestureDetected(flags, detectionProperties)
-                    effects.forEach {
-                        it.onGestureDetected(flags, detectionProperties)
-                    }
+                updateActiveAction()
+            }
+
+            // Execute action and effects
+            if (action != null) {
+                action.onGestureDetected(flags, detectionProperties)
+                effects.forEach {
+                    it.onGestureDetected(flags, detectionProperties)
                 }
             }
         }
     }
 
-    init {
-        gestureController.setGestureListener(TripleTapCapableGestureListener())
-        updateSensorListener()
-    }
-
     override fun updateSensorListener() {
-        //Hack - prevents call from ColumbusService before TapTapColumbusService is initialized.
+        // Hack - prevents call from ColumbusService before TapTapColumbusService is initialized.
         if (tripleTapActions == null) return
 
         val activeAction = updateActiveAction()
         val activeTripleAction = updateActiveTripleAction()
+
         if (activeAction == null && activeTripleAction == null) {
             Log.i(TAG, "No available actions")
-            if(!passiveWhenGatesSet()) {
+            if (!passiveWhenGatesSet()) {
                 deactivateGates()
                 stopListening()
                 return
-            }else{
+            } else {
                 Log.i(TAG, "Passive when gates are set, sensor listener will not be stopped")
             }
         }
@@ -124,15 +126,15 @@ class TapTapColumbusService(
 
             updateActiveAction()?.onGestureDetected(0, null)
             updateActiveTripleAction()?.onGestureDetected(0, null)
-        }else{
-            //Possibly need to suppress the loading notification
+        } else {
+            // Possibly need to suppress the loading notification
             GlobalScope.launch {
                 serviceEventEmitter.postServiceEvent(ServiceEventEmitter.ServiceEvent.Started)
             }
         }
     }
 
-    fun updateActiveTripleAction(): Action? {
+    private fun updateActiveTripleAction(): Action? {
         val firstAvailableAction = firstAvailableTripleAction()
         val lastActiveAction = lastActiveTripleAction
         if (firstAvailableAction != null && lastActiveAction != firstAvailableAction) {
@@ -166,5 +168,4 @@ class TapTapColumbusService(
     private fun passiveWhenGatesSet(): Boolean {
         return actions.any { it.passiveWhenGatesSet() }
     }
-
 }

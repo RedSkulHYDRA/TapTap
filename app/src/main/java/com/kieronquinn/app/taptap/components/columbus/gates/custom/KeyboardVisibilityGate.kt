@@ -24,7 +24,7 @@ class KeyboardVisibilityGate(
     private val keyboardVisible = accessibilityRouter.accessibilityOutputBus
         .filter { it is TapTapAccessibilityRouter.AccessibilityOutput.KeyboardVisibilityState }
         .map { (it as TapTapAccessibilityRouter.AccessibilityOutput.KeyboardVisibilityState).visible }
-        .stateIn(lifecycleScope, SharingStarted.Eagerly, false)
+        .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         lifecycle.whenCreated {

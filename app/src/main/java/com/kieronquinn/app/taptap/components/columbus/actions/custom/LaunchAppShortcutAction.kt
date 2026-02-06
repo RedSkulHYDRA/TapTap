@@ -38,7 +38,7 @@ class LaunchAppShortcutAction(
     private val accessibilityRouter by inject<TapTapAccessibilityRouter>()
     private var isOpen = accessibilityRouter.accessibilityOutputBus.filter { it is TapTapAccessibilityRouter.AccessibilityOutput.AppOpen }
         .map { (it as TapTapAccessibilityRouter.AccessibilityOutput.AppOpen).packageName == appShortcutData.packageName }
-        .stateIn(lifecycleScope, SharingStarted.Eagerly, false)
+        .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         whenCreated {

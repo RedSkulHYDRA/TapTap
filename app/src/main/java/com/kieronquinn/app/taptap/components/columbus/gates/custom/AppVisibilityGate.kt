@@ -21,7 +21,7 @@ class AppVisibilityGate(
     private val accessibilityRouter by inject<TapTapAccessibilityRouter>()
     private val appOpen = accessibilityRouter.accessibilityOutputBus.filter { it is TapTapAccessibilityRouter.AccessibilityOutput.AppOpen }
         .map { (it as TapTapAccessibilityRouter.AccessibilityOutput.AppOpen).packageName == packageName }
-        .stateIn(lifecycleScope, SharingStarted.Eagerly, false)
+        .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         lifecycle.whenCreated {

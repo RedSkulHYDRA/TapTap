@@ -18,7 +18,7 @@ class TelephonyActivityGate(
 
     private var isCallBlocked = context.onCallStateChanged()
         .map { telephonyManager.callState == 2 }
-        .stateIn(lifecycleScope, SharingStarted.Eagerly, false)
+        .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val telephonyManager by lazy {
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager

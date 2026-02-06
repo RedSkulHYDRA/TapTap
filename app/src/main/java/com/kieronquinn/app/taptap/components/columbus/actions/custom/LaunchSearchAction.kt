@@ -34,7 +34,7 @@ class LaunchSearchAction(
     private val accessibilityRouter by inject<TapTapAccessibilityRouter>()
     private var isOpen = accessibilityRouter.accessibilityOutputBus.filter { it is TapTapAccessibilityRouter.AccessibilityOutput.AppOpen }
         .map { context.isPackageAssistant((it as TapTapAccessibilityRouter.AccessibilityOutput.AppOpen).packageName) }
-        .stateIn(lifecycleScope, SharingStarted.Eagerly, false)
+        .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         lifecycle.whenCreated {

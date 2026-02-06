@@ -114,9 +114,11 @@ open class ColumbusService(
                 it.onGestureDetected(0, null)
             }
             updateActiveAction()
+            if(wakeLock.isHeld()) {
+                wakeLock.release()
+            }
         }
     }
-
     protected fun updateActiveAction(): Action? {
         val firstAvailableAction = firstAvailableAction()
         val lastAction = lastActiveAction

@@ -22,7 +22,7 @@ class CameraVisibilityGate(
 
     private val cameraOpen = accessibilityRouter.accessibilityOutputBus.filter { it is TapTapAccessibilityRouter.AccessibilityOutput.AppOpen }
         .map { context.isPackageCamera((it as TapTapAccessibilityRouter.AccessibilityOutput.AppOpen).packageName) }
-        .stateIn(lifecycleScope, SharingStarted.Eagerly, false)
+        .stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         whenCreated {

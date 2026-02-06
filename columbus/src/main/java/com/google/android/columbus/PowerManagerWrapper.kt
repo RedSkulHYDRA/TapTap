@@ -6,8 +6,19 @@ import android.os.PowerManager
 class PowerManagerWrapper(context: Context) {
 
     inner class WakeLockWrapper(private val wakeLock: PowerManager.WakeLock) {
+
         fun acquire(timeout: Long) {
             wakeLock.acquire(timeout)
+        }
+
+        fun release() {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
+        }
+
+        fun isHeld(): Boolean {
+            return wakeLock.isHeld
         }
     }
 

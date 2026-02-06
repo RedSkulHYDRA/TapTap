@@ -6,21 +6,30 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
-import android.os.Looper
+import android.os.HandlerThread
+import android.util.Log
 import com.kieronquinn.app.shared.taprt.BaseTapRT
 
 open class GestureSensorImpl(
     context: Context
 ): GestureSensor() {
 
+    companion object {
+        private const val TAG = "GestureSensorImpl"
+        private const val SENSOR_THREAD_NAME = "GestureSensorThread"
+        private const val HEURISTIC_SAMPLING_PERIOD_US = 0 // Fastest possible
+        private const val NORMAL_SAMPLING_PERIOD_US = 21000 // ~48Hz
+    }
+
     open inner class GestureSensorEventListener: SensorEventListener {
 
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-            //no-op
+            // No-op
         }
 
         override fun onSensorChanged(event: SensorEvent?) {
-            if(event == null) return
+            if (event == null) return
+
             val sensorType = event.sensor.type
             tap.updateData(
                 sensorType,
@@ -31,8 +40,8 @@ open class GestureSensorImpl(
                 samplingIntervalNs,
                 isRunningInLowSamplingRate
             )
-            val timing = tap.checkDoubleTapTiming(event.timestamp)
-            when(timing){
+
+            when (val timing = tap.checkDoubleTapTiming(event.timestamp)) {
                 1 -> handler.post {
                     reportGestureDetected(2, DetectionProperties(true))
                 }
@@ -42,50 +51,82 @@ open class GestureSensorImpl(
             }
         }
 
-        fun setListening(listening: Boolean, samplingPeriod: Int) {
-            if(listening && accelerometer != null && gyroscope != null) {
-                sensorManager.registerListener(this, accelerometer, samplingPeriod, handler)
-                sensorManager.registerListener(this, gyroscope, samplingPeriod, handler)
+        fun setListening(listening: Boolean, samplingPeriodUs: Int) {
+            if (listening) {
+                // Check sensor availability
+                if (accelerometer == null) {
+                    Log.e(TAG, "Accelerometer not available on this device")
+                    return
+                }
+                if (gyroscope == null) {
+                    Log.e(TAG, "Gyroscope not available on this device")
+                    return
+                }
+
+                // Register listeners on background thread
+                sensorManager.registerListener(
+                    this,
+                    accelerometer,
+                    samplingPeriodUs,
+                    handler
+                )
+                sensorManager.registerListener(
+                    this,
+                    gyroscope,
+                    samplingPeriodUs,
+                    handler
+                )
                 setListening(true)
-            }else{
+                Log.d(TAG, "Started listening (sampling period: ${samplingPeriodUs}µs)")
+            } else {
                 sensorManager.unregisterListener(this)
                 setListening(false)
+                Log.d(TAG, "Stopped listening")
             }
         }
-
     }
 
-    private val handler = Handler(Looper.getMainLooper())
+    // Background thread for sensor processing
+    private val handlerThread = HandlerThread(SENSOR_THREAD_NAME).apply { start() }
+    private val handler = Handler(handlerThread.looper)
+
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val accelerometer = sensorManager.getDefaultSensor(1)
-    private val gyroscope = sensorManager.getDefaultSensor(4)
+    private val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    private val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+
     open val sensorEventListener = GestureSensorEventListener()
     protected val samplingIntervalNs = 2500000L
     protected val isRunningInLowSamplingRate = false
+
+    @Volatile
     private var isListening = false
+
     open val tap: BaseTapRT = TapRT(160000000L)
 
     override fun isListening(): Boolean {
         return isListening
     }
 
-    fun setListening(listening: Boolean) {
+    protected fun setListening(listening: Boolean) {
         this.isListening = listening
     }
 
     override fun startListening(heuristicMode: Boolean) {
-        if(heuristicMode) {
-            sensorEventListener.setListening(true, 0)
-            (tap as? TapRT)?.run {
+        val tapRT = tap as? TapRT
+
+        if (heuristicMode) {
+            sensorEventListener.setListening(true, HEURISTIC_SAMPLING_PERIOD_US)
+            tapRT?.apply {
                 getLowpassKey().setPara(0.2f)
                 getHighpassKey().setPara(0.2f)
                 getPositivePeakDetector().setMinNoiseTolerate(0.05f)
                 getPositivePeakDetector().setWindowSize(0x40)
                 reset(false)
+                Log.d(TAG, "Started in heuristic mode")
             }
-        }else{
-            sensorEventListener.setListening(true, 21000)
-            (tap as? TapRT)?.run {
+        } else {
+            sensorEventListener.setListening(true, NORMAL_SAMPLING_PERIOD_US)
+            tapRT?.apply {
                 getLowpassKey().setPara(1f)
                 getHighpassKey().setPara(0.3f)
                 getPositivePeakDetector().setMinNoiseTolerate(0.02f)
@@ -93,7 +134,12 @@ open class GestureSensorImpl(
                 getNegativePeakDetection().setMinNoiseTolerate(0.02f)
                 getNegativePeakDetection().setWindowSize(8)
                 reset(true)
+                Log.d(TAG, "Started in normal mode")
             }
+        }
+
+        if (tapRT == null) {
+            Log.w(TAG, "Tap detector is not TapRT - skipping parameter configuration")
         }
     }
 
@@ -101,4 +147,19 @@ open class GestureSensorImpl(
         sensorEventListener.setListening(false, 0)
     }
 
+    // Clean up background thread when done
+    fun cleanup() {
+        Log.d(TAG, "Cleaning up GestureSensorImpl")
+        stopListening()
+        handlerThread.quitSafely()
+    }
+
+    // Override finalize as safety net (called by GC if cleanup() is missed)
+    protected fun finalize() {
+        try {
+            cleanup()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during finalize cleanup", e)
+        }
+    }
 }

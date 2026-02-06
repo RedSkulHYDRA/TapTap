@@ -54,9 +54,14 @@ class WakeDeviceFeedback(serviceLifecycle: Lifecycle, private val context: Conte
                     PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE,
                     TAG
                 )
-                wakeLock.acquire(5000)
-                delay(5000)
-                wakeLock.release()
+                try {
+                    wakeLock.acquire(5000)
+                    delay(5000)
+                } finally {
+                    if (wakeLock.isHeld) {
+                        wakeLock.release()
+                    }
+                }
             }
             if(unlock) {
                 context.startActivity(Intent(context, UnlockDeviceActivity::class.java).apply {
